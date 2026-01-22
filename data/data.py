@@ -7,9 +7,9 @@ df = df.set_index("time")
 
 df["Global_active_power"] = pd.to_numeric(df["Global_active_power"], errors="coerce")
 
-df["energy_kWh_min"] = df["Global_active_power"] * 1000 / 60 / 1000
+df["energy_kWh_min"] = df["Global_active_power"] / 60 
 
-energy_hourly = df["energy_kWh_min"].resample("1H").sum()
+energy_hourly = df["energy_kWh_min"].resample("1h").sum()
 
 out = energy_hourly.reset_index()
 out.columns = ["time", "energy_kWh"]
