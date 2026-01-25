@@ -1,4 +1,3 @@
 venv/
-data/dataset_energy_hourly.csv
-data/household_power_consumption.csv
+data/AEP_hourly.csv
 _info.txt
