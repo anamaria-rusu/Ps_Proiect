@@ -2,3 +2,5 @@ venv/
 data/
 vscode/
 __pycache__/
+data/AEP_hourly.csv
+_info.txt
