@@ -131,71 +131,56 @@ class ReversibleInstanceNormalization(nn.Module):
     def forward(self, x, return_stats=False):
         """
         Args:
-            x: tensor de intrare
+            x: tensor de intrare de forma (B, L, C)
             return_stats: daca True, returneaza media/varianta pentru inversare
         
         Returns:
-            x_norm: tensor normalizat
-            stats: (media, varianta) pentru inversare
+            x_norm: tensor normalizat (B, L, C)
+            stats: (media, varianta) pentru inversare, forme (B, C)
         """
-        # Reshape pentru a calcula pe dimensiuni instance
-        if x.dim() == 3:  # (batch, seq_len, features)
-            batch_size, seq_len, num_features = x.shape
-            x_reshaped = x.view(batch_size * seq_len, num_features)
-        else:
-            x_reshaped = x
-        
-        #calculam media si varianta pentru fiecare instanta
-        mean = x_reshaped.mean(dim=1, keepdim=True)
-        var = x_reshaped.var(dim=1, unbiased=False, keepdim=True)
-        #normalizam
-        x_norm = (x_reshaped - mean) / torch.sqrt(var + self.eps)
-        
-        #aplicam scalare si shift daca affine=True
+        if x.dim() != 3:
+            raise ValueError("ReversibleInstanceNormalization asteapta tensori 3D (B, L, C)")
+
+        # media si varianta pe dimensiunea temporala (seq_len) pentru fiecare sample si canal
+        # forme: (B, 1, C)
+        mean = x.mean(dim=1, keepdim=True)
+        var = x.var(dim=1, unbiased=False, keepdim=True)
+
+        # normalizare
+        x_norm = (x - mean) / torch.sqrt(var + self.eps)
+
+        # aplicam scalare si shift daca affine=True (broadcast pe (B, 1, C))
         if self.affine:
-            x_norm = x_norm * self.gamma + self.beta
-        
-        #reshape la forma originala
-        if x.dim() == 3:
-            x_norm = x_norm.view(batch_size, seq_len, num_features)
-        
+            gamma = self.gamma.view(1, 1, -1)
+            beta = self.beta.view(1, 1, -1)
+            x_norm = x_norm * gamma + beta
+
         if return_stats:
+            # intoarcem (B, C) pentru mean si var
             return x_norm, (mean.squeeze(1), var.squeeze(1))
-        
+
         return x_norm
     
     def inverse(self, x_norm, mean, var):
         """
-        Inverseaza normalizarea pentru a obtine datele originale
-        
-        Args:
-            x_norm: tensor normalizat
-            mean: media calculata in forward
-            var: varianta calculata in forward
-        
-        Returns:
-            x: tensor denormalizat
+        Inverseaza normalizarea pentru a obtine datele originale.
+        Accepta `x_norm` de forma (B, T, C) unde T poate fi diferit de L (ex: pred_len),
+        folosind media/varianta pe (B, 1, C) calculate din intrare.
         """
-        #reshape
-        if x_norm.dim() == 3:
-            batch_size, seq_len, num_features = x_norm.shape
-            x_reshaped = x_norm.view(batch_size * seq_len, num_features)
-        else:
-            x_reshaped = x_norm
-        
-        #inversam scalare si shift
+        if x_norm.dim() != 3:
+            raise ValueError("ReversibleInstanceNormalization.inverse asteapta tensori 3D (B, T, C)")
+
+        # inversam scalare si shift (broadcast pe (B, T, C))
         if self.affine:
-            x = (x_reshaped - self.beta) / self.gamma
+            gamma = self.gamma.view(1, 1, -1)
+            beta = self.beta.view(1, 1, -1)
+            x = (x_norm - beta) / gamma
         else:
-            x = x_reshaped
-        
-        #inversam normalizarea
-        mean_reshaped = mean.unsqueeze(1)
-        var_reshaped = var.unsqueeze(1)
+            x = x_norm
+
+        # inversam normalizarea folosind (B, 1, C) pentru mean/var
+        mean_reshaped = mean.unsqueeze(1)  # (B, 1, C)
+        var_reshaped = var.unsqueeze(1)    # (B, 1, C)
         x = x * torch.sqrt(var_reshaped + self.eps) + mean_reshaped
-        
-        #reshape la forma originala
-        if x_norm.dim() == 3:
-            x = x.view(batch_size, seq_len, num_features)
-        
+
         return x

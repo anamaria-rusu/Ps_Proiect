@@ -3,8 +3,8 @@ Implementare Encoder pentru arhitectura Transformer
 """
 import torch
 import torch.nn as nn
-from .attention import MultiHeadAttention
-from .layers import PositionWiseFeedForward, ResidualConnection
+from attention import MultiHeadAttention
+from layers import PositionWiseFeedForward, ResidualConnection
 
 
 class EncoderLayer(nn.Module):
