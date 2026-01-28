@@ -82,25 +82,20 @@ print(f"Date: {len(energy)} puncte")
 
 
 #split
-x, y = create_samples(energy.values, win_len, horizon)
-x /= 1000.0
-y /= 1000.0
+n = len(energy)
+train_data = energy.values[:int(n*0.7)]
+val_data = energy.values[int(n*0.7):int(n*0.9)]
+test_data = energy.values[int(n*0.9):]
 
-#train + val - 90%
-x_train_all = x[:int(0.9*len(x))] 
-y_train_all = y[:int(0.9*len(y))]
 
-#train - 80%
-x_train = x_train_all[:int(0.8*len(x_train_all))]
-y_train = y_train_all[:int(0.8*len(y_train_all))]
+x_train, y_train = create_samples(train_data, win_len, horizon)
+x_val, y_val = create_samples(val_data, win_len, horizon)
+x_test, y_test = create_samples(test_data, win_len, horizon)
 
-#val - 20%
-x_val = x_train_all[int(0.8*len(x_train_all)):]
-y_val = y_train_all[int(0.8*len(y_train_all)):]
+x_train /= 1000.0; y_train /= 1000.0
+x_val /= 1000.0; y_val /= 1000.0
+x_test /= 1000.0; y_test /= 1000.0
 
-#test - 10%
-x_test = x[int(0.9*len(x)):]
-y_test = y[int(0.9*len(y)):]
 
 print(f"Train: {x_train.shape}, Val: {x_val.shape}, Test: {x_test.shape}")
 
