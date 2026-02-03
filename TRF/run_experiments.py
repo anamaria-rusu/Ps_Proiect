@@ -214,7 +214,6 @@ def save_plots(train_history, y_true, y_pred, exp_name, results_dir):
     plt.plot(train_history['val_losses'], label="Val MSE")
     plt.xlabel("Epoca")
     plt.ylabel("MSE")
-    plt.title(f"{exp_name} - Training History")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()

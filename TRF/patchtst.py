@@ -131,32 +131,3 @@ class PatchTST(nn.Module):
         
         return forecast
 
-
-class PatchTSTForecasting(nn.Module):
-    
-    def __init__(self, config: dict):
-        """
-        Args:
-            config: dictionar cu parametri
-            - seq_len, pred_len, in_channels
-            - patch_len, stride
-            - d_model, num_heads, num_layers, d_ff
-            - dropout
-        """
-        super(PatchTSTForecasting, self).__init__()
-        
-        self.model = PatchTST(
-            seq_len=config.get('seq_len', 336),
-            pred_len=config.get('pred_len', 96),
-            in_channels=config.get('in_channels', 1),
-            patch_len=config.get('patch_len', 16),
-            stride=config.get('stride', 8),
-            d_model=config.get('d_model', 512),
-            num_heads=config.get('num_heads', 8),
-            num_layers=config.get('num_layers', 6),
-            d_ff=config.get('d_ff', 2048),
-            dropout=config.get('dropout', 0.1)
-        )
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.model(x)
