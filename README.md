@@ -1,4 +1,4 @@
-# Time Series Forecasting: LSTM vs Transformer Comparison
+# Time Series Forecasting: LSTM/GRU vs Transformer Comparison
 
 ## Project Overview
 
